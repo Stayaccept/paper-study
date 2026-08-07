@@ -27,9 +27,9 @@ sync_status: "synced"
 
 $C$ 是完成预训练所使用的浮点运算量。对标准稠密 Transformer，一阶近似为：
 
-\[
+$$
 C\approx 6ND=6NBS,
-\]
+$$
 
 其中 $N$ 是参数量，$D$ 是已处理 token 数，$B$ 是每步 batch token 数，$S$ 是更新步数。系数 6 近似包含一次前向和两倍前向成本的反向传播。
 
@@ -62,4 +62,3 @@ C\approx 6ND=6NBS,
 - Hoffmann 的约束 $FLOPs(N,D)=C$：[[2203.15556/2203.15556_中文译文.pdf#page=4|中文译文 p.4]]。
 - Hoffmann 的细项 FLOPs 核算及与 $6ND$ 的比较：[[2203.15556/2203.15556_中文译文.pdf#page=23|中文译文 p.23]]。
 <!-- AUTO:EVIDENCE:END -->
-

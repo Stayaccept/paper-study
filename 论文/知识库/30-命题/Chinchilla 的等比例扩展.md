@@ -31,9 +31,9 @@ sync_status: "synced"
 
 对于 Hoffmann et al. (2022) 研究的稠密 autoregressive Transformer，在固定训练 FLOPs 下达到最低训练损失时，最优参数量和训练 token 数随预算近似等比例扩大：
 
-\[
+$$
 N_{opt}\propto C^a,\qquad D_{opt}\propto C^b,\qquad a\approx b\approx 0.5.
-\]
+$$
 
 因为 $C\approx 6ND$，$a+b\approx1$；“等比例”指 $N,D$ 对 $C$ 的指数近似相等，并不是说参数数值与 token 数值相等。
 

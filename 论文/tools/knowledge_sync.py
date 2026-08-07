@@ -853,6 +853,16 @@ def _auto_canvas_text(vault: Path, state: Mapping[str, Any]) -> str:
     return json.dumps(canvas, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
 
 
+def _managed_content_equal(relative: Path, current: str, desired: str) -> bool:
+    """Canvas 由 Obsidian 重排 JSON 空白后仍视为相同内容。"""
+    if relative.suffix == ".canvas":
+        try:
+            return json.loads(current) == json.loads(desired)
+        except json.JSONDecodeError:
+            return False
+    return current == desired
+
+
 def _managed_view_changes(vault: Path, state: Mapping[str, Any]) -> list[str]:
     desired = {
         PENDING_MOC_PATH: _pending_moc_text(vault, state),
@@ -861,7 +871,9 @@ def _managed_view_changes(vault: Path, state: Mapping[str, Any]) -> list[str]:
     changes: list[str] = []
     for relative, content in desired.items():
         path = vault / relative
-        if not path.is_file() or _read_note(path) != content:
+        if not path.is_file() or not _managed_content_equal(
+            relative, _read_note(path), content
+        ):
             changes.append(relative.as_posix())
     return changes
 
@@ -873,7 +885,12 @@ def _write_managed_views(vault: Path, state: Mapping[str, Any]) -> list[str]:
     }
     written: list[str] = []
     for relative, content in desired.items():
-        if _atomic_write_text(vault / relative, content):
+        path = vault / relative
+        if path.is_file() and _managed_content_equal(
+            relative, _read_note(path), content
+        ):
+            continue
+        if _atomic_write_text(path, content):
             written.append(relative.as_posix())
     return written
 
@@ -1137,6 +1154,11 @@ def _enrichment_prompt(entries: Sequence[Mapping[str, Any]]) -> str:
 6. 完成后，将对应 paper frontmatter 的 `semantic_status` 改为 `candidate_generated`，
    `review_status` 保持 `pending`；并仅同步更新 `知识库/.meta/state.json`
    对应记录的这两个工作流字段和 pending.semantic 列表，保留其他内容。
+7. 不得把 `$...$` 数学公式写进 Wiki 链接的 target 或显示文本，也不得放进
+   frontmatter 的 title/aliases、普通 Markdown 链接标签或 Canvas label；这些位置只用纯文本。
+   应写成 `[[概念笔记|概念名称]] $N$`，使 Obsidian 能正确渲染公式。
+8. Obsidian 数学语法只使用 `$...$`（行内）或 `$$...$$`（独立公式块）；
+   不使用 `\\(...\\)`、`\\[...\\]`，也不留下裸 LaTeX。
 
 待处理对象：
 """.strip()

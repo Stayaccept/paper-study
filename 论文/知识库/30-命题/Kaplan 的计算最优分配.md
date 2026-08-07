@@ -29,12 +29,12 @@ sync_status: "synced"
 
 在 Kaplan et al. (2020) 的 WebText2、模型族、critical-batch 校正与损失拟合下，计算最优配置随预算增长约为：
 
-\[
+$$
 N_{opt}\propto C_{min}^{0.73},\quad
 D_{opt}\propto C_{min}^{0.27},\quad
 B_{crit}\propto C_{min}^{0.24},\quad
 S_{min}\propto C_{min}^{0.03}.
-\]
+$$
 
 因此，增加十倍训练计算量时，最优模型规模约增大五倍，而处理的数据量约增大不足两倍；高效训练应使用更大的模型，并在距离完全收敛尚远时停止。
 

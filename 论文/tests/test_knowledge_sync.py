@@ -99,6 +99,23 @@ class KnowledgeSyncTests(unittest.TestCase):
         self.assertEqual(moc_before, moc_path.read_bytes())
         self.assertEqual(canvas_before, canvas_path.read_bytes())
 
+    def test_obsidian_canvas_reformat_does_not_trigger_sync(self) -> None:
+        self.make_complete_paper()
+        knowledge_sync.sync_repository(self.root, write=True)
+        canvas_path = self.root / "知识库" / "90-视图" / "自动论文总览.canvas"
+        canvas = json.loads(canvas_path.read_text(encoding="utf-8"))
+        obsidian_text = (
+            json.dumps(canvas, ensure_ascii=False, separators=(",", ":")) + "\n"
+        )
+        canvas_path.write_text(obsidian_text, encoding="utf-8")
+
+        preview = knowledge_sync.sync_repository(self.root, write=False)
+        written = knowledge_sync.sync_repository(self.root, write=True)
+
+        self.assertNotIn("知识库/90-视图/自动论文总览.canvas", preview["view_changes"])
+        self.assertEqual(written["written_views"], [])
+        self.assertEqual(canvas_path.read_text(encoding="utf-8"), obsidian_text)
+
     def test_pdf_change_updates_hash_and_resets_workflow(self) -> None:
         directory = self.make_complete_paper()
         knowledge_sync.sync_repository(self.root, write=True)
@@ -286,7 +303,9 @@ class KnowledgeSyncTests(unittest.TestCase):
         self.assertEqual(command[:2], ["/mock/codex", "exec"])
         self.assertIn("workspace-write", command)
         self.assertIn('approval_policy="never"', command)
-        self.assertIn("AUTO:RELATIONS", runner.call_args.kwargs["input"])
+        prompt = runner.call_args.kwargs["input"]
+        self.assertIn("AUTO:RELATIONS", prompt)
+        self.assertIn("不得把 `$...$` 数学公式写进 Wiki 链接", prompt)
         self.assertEqual(executed["returncode"], 0)
 
     def test_enrich_skips_reviewed_note_when_state_is_stale(self) -> None:
