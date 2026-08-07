@@ -1,0 +1,95 @@
+filters:
+  and:
+    - file.inFolder("知识库")
+    - file.ext == "md"
+    - not:
+        - file.inFolder("知识库/模板")
+    - not:
+        - file.inFolder("知识库/90-视图")
+properties:
+  file.name:
+    displayName: 笔记
+  file.folder:
+    displayName: 目录
+  file.mtime:
+    displayName: 最近更新
+  type:
+    displayName: 类型
+  uid:
+    displayName: 稳定 ID
+  source_version:
+    displayName: 来源版本
+  sync_status:
+    displayName: 同步状态
+  semantic_status:
+    displayName: 语义状态
+  review_status:
+    displayName: 审核状态
+  sources:
+    displayName: 证据来源
+  supports:
+    displayName: 支持
+  refines:
+    displayName: 修正
+  challenges:
+    displayName: 挑战
+  depends_on:
+    displayName: 依赖概念
+  limited_by:
+    displayName: 成立边界
+views:
+  - type: table
+    name: 全部知识
+    order:
+      - file.name
+      - type
+      - review_status
+      - semantic_status
+      - sync_status
+      - file.folder
+      - file.mtime
+  - type: table
+    name: 论文
+    filters:
+      and:
+        - type == "paper"
+    order:
+      - file.name
+      - uid
+      - source_version
+      - sync_status
+      - semantic_status
+      - review_status
+      - file.mtime
+  - type: table
+    name: 命题
+    filters:
+      and:
+        - type == "claim"
+    order:
+      - file.name
+      - sources
+      - supports
+      - refines
+      - challenges
+      - limited_by
+      - review_status
+  - type: table
+    name: 待审核
+    filters:
+      or:
+        - review_status == "needs_review"
+        - review_status == "pending"
+        - review_status == "draft"
+        - review_status == "conflict"
+        - semantic_status == "pending"
+        - sync_status == "needs_review"
+        - sync_status == "conflict"
+    order:
+      - file.name
+      - type
+      - review_status
+      - semantic_status
+      - sync_status
+      - sources
+      - file.mtime

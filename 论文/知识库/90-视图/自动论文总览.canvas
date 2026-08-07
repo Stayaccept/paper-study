@@ -1,0 +1,52 @@
+{
+  "edges": [
+    {
+      "fromNode": "status-processed",
+      "fromSide": "right",
+      "id": "edge-processed-2001-08361",
+      "label": "已生成候选 / 已审核",
+      "toEnd": "arrow",
+      "toNode": "paper-2001-08361",
+      "toSide": "left"
+    },
+    {
+      "fromNode": "status-processed",
+      "fromSide": "right",
+      "id": "edge-processed-2203-15556",
+      "label": "已生成候选 / 已审核",
+      "toEnd": "arrow",
+      "toNode": "paper-2203-15556",
+      "toSide": "left"
+    }
+  ],
+  "nodes": [
+    {
+      "color": "4",
+      "height": 120,
+      "id": "status-processed",
+      "text": "# 已生成候选 / 已审核\n\n2 篇论文",
+      "type": "text",
+      "width": 260,
+      "x": 0,
+      "y": 520
+    },
+    {
+      "file": "知识库/10-论文/论文 - 2001.08361.md",
+      "height": 160,
+      "id": "paper-2001-08361",
+      "type": "file",
+      "width": 280,
+      "x": 360,
+      "y": 520
+    },
+    {
+      "file": "知识库/10-论文/论文 - 2203.15556.md",
+      "height": 160,
+      "id": "paper-2203-15556",
+      "type": "file",
+      "width": 280,
+      "x": 690,
+      "y": 520
+    }
+  ]
+}
