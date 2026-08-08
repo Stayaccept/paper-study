@@ -55,6 +55,11 @@ class KnowledgeSyncTests(unittest.TestCase):
         self.assertIn(knowledge_sync.AUTO_RELATIONS_BEGIN, note)
         self.assertIn(knowledge_sync.AUTO_EVIDENCE_BEGIN, note)
         self.assertIn("[[2203.15556/2203.15556_英文原文.pdf|英文原文]]", note)
+        self.assertIn("[[2203.15556/2203.15556_中文译文.pdf|中文译文]]", note)
+        self.assertEqual(
+            set(self.state()["papers"]["paper:arxiv:2203.15556"]["source_files"]),
+            {"english", "chinese"},
+        )
         state = self.state()
         self.assertEqual(state["pending"]["semantic"], ["paper:arxiv:2203.15556"])
         self.assertEqual(
@@ -152,8 +157,8 @@ class KnowledgeSyncTests(unittest.TestCase):
         state["external_pipeline"] = {"cursor": 7, "keep": ["x", "y"]}
         state["papers"]["paper:arxiv:2203.15556"]["human_flag"] = "keep-me"
         state_path.write_text(json.dumps(state, ensure_ascii=False), encoding="utf-8")
-        bilingual = directory / "2203.15556_中英逐句对照.pdf"
-        bilingual.write_bytes(bilingual.read_bytes() + b"revision")
+        chinese = directory / "2203.15556_中文译文.pdf"
+        chinese.write_bytes(chinese.read_bytes() + b"revision")
 
         knowledge_sync.sync_repository(self.root, write=True)
 
@@ -162,6 +167,42 @@ class KnowledgeSyncTests(unittest.TestCase):
         self.assertEqual(
             merged["papers"]["paper:arxiv:2203.15556"]["human_flag"], "keep-me"
         )
+
+    def test_legacy_bilingual_metadata_is_removed(self) -> None:
+        self.make_complete_paper()
+        knowledge_sync.sync_repository(self.root, write=True)
+        note = self.note_path()
+        note.write_text(
+            note.read_text(encoding="utf-8").replace(
+                'source_chinese_hash:',
+                'source_bilingual_hash: "legacy"\nsource_chinese_hash:',
+                1,
+            ),
+            encoding="utf-8",
+        )
+        state_path = self.root / "知识库" / ".meta" / "state.json"
+        state = self.state()
+        entry = state["papers"]["paper:arxiv:2203.15556"]
+        entry["semantic_status"] = "reviewed"
+        entry["review_status"] = "reviewed"
+        entry["source_files"]["bilingual"] = "legacy.pdf"
+        entry["source_hashes"]["bilingual"] = "legacy"
+        state_path.write_text(json.dumps(state, ensure_ascii=False), encoding="utf-8")
+        note.write_text(
+            note.read_text(encoding="utf-8")
+            .replace('semantic_status: "pending"', 'semantic_status: "reviewed"')
+            .replace('review_status: "pending"', 'review_status: "reviewed"'),
+            encoding="utf-8",
+        )
+
+        knowledge_sync.sync_repository(self.root, write=True)
+
+        self.assertNotIn("source_bilingual_hash", note.read_text(encoding="utf-8"))
+        migrated = self.state()["papers"]["paper:arxiv:2203.15556"]
+        self.assertNotIn("bilingual", migrated["source_files"])
+        self.assertNotIn("bilingual", migrated["source_hashes"])
+        self.assertEqual(migrated["semantic_status"], "reviewed")
+        self.assertEqual(migrated["review_status"], "reviewed")
 
     def test_stale_state_hash_does_not_downgrade_current_reviewed_note(self) -> None:
         self.make_complete_paper()
@@ -212,14 +253,13 @@ class KnowledgeSyncTests(unittest.TestCase):
     def test_incomplete_directory_is_skipped_without_creating_state(self) -> None:
         directory = self.root / "2001.08361"
         directory.mkdir()
-        (directory / "2001.08361_英文原文.pdf").write_bytes(b"one")
-        (directory / "2001.08361_中文译文.pdf").write_bytes(b"two")
+        (directory / "2001.08361_英文原文.pdf").write_bytes(b"%PDF-one")
 
         report = knowledge_sync.sync_repository(self.root, write=True)
 
         self.assertEqual(report["papers"], [])
         self.assertEqual(len(report["skipped"]), 1)
-        self.assertIn("2001.08361_中英逐句对照.pdf", report["skipped"][0]["missing"])
+        self.assertIn("2001.08361_中文译文.pdf", report["skipped"][0]["missing"])
         self.assertFalse(self.note_path("2001.08361").exists())
         self.assertFalse((self.root / "知识库" / ".meta" / "state.json").exists())
         check = knowledge_sync.check_repository(self.root)

@@ -4,7 +4,7 @@
 主路径只做可确定、可重复的来源登记：
 
 * 只扫描根目录下名称符合 ``YYYY.NNNN[N]`` 的直接子目录；
-* 只有英文原文、中文译文、中英逐句对照三份固定命名 PDF 齐全才处理；
+* 只有英文原文、中文译文两份固定命名 PDF 齐全才处理；
 * 使用稳定 uid 和 SHA-256 识别新论文、重复运行与来源变更；
 * 更新 Markdown 时，只改写明确的程序拥有字段和
   ``AUTO:METADATA`` 区块，不改写人工正文、关系或证据区块；
@@ -38,7 +38,6 @@ ARXIV_ID_RE = re.compile(r"^\d{4}\.\d{4,5}$")
 PDF_VARIANTS: tuple[tuple[str, str, str], ...] = (
     ("english", "英文原文", "英文原文"),
     ("chinese", "中文译文", "中文译文"),
-    ("bilingual", "中英逐句对照", "中英逐句对照"),
 )
 
 KNOWLEDGE_DIR = Path("知识库")
@@ -62,9 +61,9 @@ YAML_ALWAYS_OWNED = (
     "source_hash",
     "source_english_hash",
     "source_chinese_hash",
-    "source_bilingual_hash",
     "sync_status",
 )
+YAML_DEPRECATED_OWNED = ("source_bilingual_hash",)
 YAML_WORKFLOW_FIELDS = ("semantic_status", "review_status")
 
 
@@ -315,6 +314,8 @@ def _update_frontmatter(text: str, fields: Mapping[str, str]) -> str:
     for line in lines[1:end]:
         match = None if line[:1].isspace() else _TOP_LEVEL_FIELD_RE.match(line)
         key = match.group(1) if match else None
+        if key in YAML_DEPRECATED_OWNED:
+            continue
         if key in fields:
             if key not in seen:
                 rewritten.append(f"{key}: {_yaml_scalar(fields[key])}{newline}")
@@ -431,7 +432,6 @@ def _source_fields(source: PaperSource) -> dict[str, str]:
         "source_hash": source.source_hash,
         "source_english_hash": source.hashes["english"],
         "source_chinese_hash": source.hashes["chinese"],
-        "source_bilingual_hash": source.hashes["bilingual"],
         "sync_status": "synced",
     }
 
@@ -559,6 +559,16 @@ def _known_source_hashes(
     return tuple(hashes)
 
 
+def _current_variant_hashes_match(
+    state_entry: Mapping[str, Any], source: PaperSource
+) -> bool:
+    """识别只移除旧来源角色、但现有 PDF 内容未变的模式迁移。"""
+    stored = state_entry.get("source_hashes")
+    if not isinstance(stored, Mapping):
+        return False
+    return all(stored.get(key) == source.hashes[key] for key, _, _ in PDF_VARIANTS)
+
+
 def _workflow_statuses(
     state_entry: Mapping[str, Any], note_text: str | None, *, reset_workflow: bool
 ) -> tuple[str, str]:
@@ -614,7 +624,11 @@ def build_plan(
         note_path = _safe_note_path(vault, note_relative)
         existing = _read_note(note_path) if note_path.is_file() else None
         known_hashes = _known_source_hashes(raw_entry, existing)
-        source_changed = bool(known_hashes) and source.source_hash not in known_hashes
+        source_changed = (
+            bool(known_hashes)
+            and source.source_hash not in known_hashes
+            and not _current_variant_hashes_match(raw_entry, source)
+        )
         # 已有人工笔记第一次被接管时无旧哈希，这不等于 PDF 变更，
         # 因此不得把 reviewed 降级为 pending。
         # state 与 note 中只要有一方的已知哈希与当前 PDF 一致，就视为

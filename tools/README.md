@@ -1,6 +1,6 @@
 # 论文知识库同步器
 
-`knowledge_sync.py` 把根目录下三份 PDF 齐全的 arXiv 论文增量登记到 Obsidian 知识库。
+`knowledge_sync.py` 把根目录下英文原文和中文译文两份 PDF 齐全的 arXiv 论文增量登记到 Obsidian 知识库。
 
 ```bash
 # 只读扫描

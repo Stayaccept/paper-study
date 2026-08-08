@@ -1,0 +1,44 @@
+{
+  "papers": {
+    "paper:arxiv:2001.08361": {
+      "arxiv_id": "2001.08361",
+      "note_path": "知识库/10-论文/论文 - 2001.08361.md",
+      "review_status": "pending",
+      "semantic_status": "pending",
+      "source_files": {
+        "chinese": "2001.08361/2001.08361_中文译文.pdf",
+        "english": "2001.08361/2001.08361_英文原文.pdf"
+      },
+      "source_hash": "0881390c862b5d32879d4cf5238930ef46c515645940dc9a834b1d6ccc8a5c0c",
+      "source_hashes": {
+        "chinese": "e63682bfdbe5b826c4a334a86d77049500a5c6464c3765357d4f5938b612e028",
+        "english": "a41bd7877fd1a6bcbba096b2619618bd2f90e02488f2365644903eb2f7c6a494"
+      },
+      "sync_status": "synced",
+      "uid": "paper:arxiv:2001.08361"
+    },
+    "paper:arxiv:2203.15556": {
+      "arxiv_id": "2203.15556",
+      "note_path": "知识库/10-论文/论文 - 2203.15556.md",
+      "review_status": "reviewed",
+      "semantic_status": "reviewed",
+      "source_files": {
+        "chinese": "2203.15556/2203.15556_中文译文.pdf",
+        "english": "2203.15556/2203.15556_英文原文.pdf"
+      },
+      "source_hash": "46b72a3155c1c8b3e19e3dd2b022705118d96797dfd732139a01b8d6d9b48100",
+      "source_hashes": {
+        "chinese": "1b5ad90e090814ecbfb5b5369cf7e436038834bdeb9041476df449ed095aa933",
+        "english": "3fd3632a8ef48171bd25282990221d49535d75356192f068b3b2ebe08f2aedd4"
+      },
+      "sync_status": "synced",
+      "uid": "paper:arxiv:2203.15556"
+    }
+  },
+  "pending": {
+    "semantic": [
+      "paper:arxiv:2001.08361"
+    ]
+  },
+  "schema_version": 1
+}
